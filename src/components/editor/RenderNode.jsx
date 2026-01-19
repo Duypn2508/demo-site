@@ -39,10 +39,10 @@ export const RenderNode = ({ render }) => {
   }, [dom, isActive, isHovered]);
 
   const getPos = useCallback((dom) => {
-    const { top, left, bottom } = dom ? dom.getBoundingClientRect() : { top: 0, left: 0, bottom: 0 };
+    const { top, right, bottom } = dom ? dom.getBoundingClientRect() : { top: 0, right: 0, bottom: 0 };
     return {
       top: `${top > 0 ? top : bottom}px`,
-      left: `${left}px`,
+      left: `${right}px`,
     };
   }, []);
 
@@ -57,7 +57,7 @@ export const RenderNode = ({ render }) => {
               style={{
                 left: getPos(dom).left,
                 top: getPos(dom).top,
-                transform: 'translateY(-100%)',
+                transform: 'translate(-100%, -100%)',
               }}
             >
               <div style={{ flex: 1, marginRight: 2, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', opacity: 0.7 }}>
