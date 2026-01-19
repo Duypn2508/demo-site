@@ -2,51 +2,41 @@ import React from 'react';
 import { useEditor } from '@craftjs/core';
 
 export const SettingsPanel = () => {
-  const { actions, selected, isEnabled } = useEditor((state, query) => {
+  const { actions, selected } = useEditor((state, query) => {
     const [currentNodeId] = state.events.selected;
     let selected;
 
     if (currentNodeId) {
       selected = {
         id: currentNodeId,
-        name: state.nodes[currentNodeId].data.name,
+        name: state.nodes[currentNodeId].data.displayName || state.nodes[currentNodeId].data.type.name,
         settings: state.nodes[currentNodeId].related && state.nodes[currentNodeId].related.settings,
         isDeletable: query.node(currentNodeId).isDeletable(),
       };
     }
 
     return {
-      selected,
-      isEnabled: state.options.enabled,
+      selected
     };
   });
 
-  if (!isEnabled) return null;
-
   return (
-    <div className="settings-panel">
-      <div className="settings-header">
-        <h3>{selected ? 'Edit Component' : 'Page Settings'}</h3>
-      </div>
-      
+    <div className="right-panel">
       {selected ? (
-        <div className="settings-content">
-          {selected.settings && React.createElement(selected.settings)}
-          
-          {selected.isDeletable && (
-            <button 
-                className="delete-btn"
-                onClick={() => {
-                    actions.delete(selected.id);
-                }}
-            >
-                Delete Component
-            </button>
-          )}
-        </div>
+        <>
+            <div className="settings-header">
+                {selected.name === 'Text' ? 'Edit Text in Image Block' : `${selected.name} Settings`}
+            </div>
+            <div className="settings-container">
+                {selected.settings && React.createElement(selected.settings)}
+            </div>
+        </>
       ) : (
           <div className="empty-state">
-              Click an element to edit styles.
+               <div style={{marginTop: 50}}>
+                    <p>Select a block</p>
+                    <p>to edit</p>
+               </div>
           </div>
       )}
     </div>

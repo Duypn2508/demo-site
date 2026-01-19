@@ -1,41 +1,76 @@
 import React from 'react';
 import { useEditor } from '@craftjs/core';
-import { Play, Square, Save, Smartphone } from 'lucide-react';
+import { 
+    Monitor, 
+    Tablet, 
+    Smartphone, 
+    Undo2, 
+    Redo2, 
+    Play, 
+    ChevronLeft 
+} from 'lucide-react';
 
-export const Topbar = () => {
-  const { actions, query, enabled } = useEditor((state) => ({
-    enabled: state.options.enabled,
+export const Topbar = ({ device, setDevice }) => {
+  const { actions, query, canUndo, canRedo } = useEditor((state, query) => ({
+    canUndo: query.history.canUndo(),
+    canRedo: query.history.canRedo(),
   }));
 
   return (
     <div className="topbar">
-      <div className="logo">
-         <span style={{fontWeight:'bold'}}>Craft Demo</span>
-      </div>
-      
-      <div className="device-toggles">
-          <button className="device-btn active"><Smartphone size={18} /></button>
-          {/* Add more device icons if needed */}
+      <div className="topbar-left">
+          <button className="history-btn"><ChevronLeft size={18} /></button>
+          <div className="site-name">
+              Site Name 
+              <span className="draft-badge">Draft</span>
+          </div>
+          <div className="history-controls">
+              <button 
+                className="history-btn" 
+                onClick={() => actions.history.undo()}
+                disabled={!canUndo}
+              >
+                  <Undo2 size={18} />
+              </button>
+              <button 
+                className="history-btn" 
+                onClick={() => actions.history.redo()}
+                disabled={!canRedo}
+              >
+                  <Redo2 size={18} />
+              </button>
+          </div>
       </div>
 
-      <div className="actions" style={{display: 'flex', alignItems: 'center', justifyContent: 'flex-end'}}>
-        <button 
-            className={`action-btn ${enabled ? 'preview-mode' : 'edit-mode'}`}
-            onClick={() => {
-                actions.setOptions(options => options.enabled = !enabled);
-            }}
-        >
-          {enabled ? <Play size={16} style={{marginRight: 5}} /> : <Square size={16} fill="currentColor" style={{marginRight: 5}} />}
-          {enabled ? 'Preview' : 'Edit'}
-        </button>
-        <button className="action-btn save-btn" onClick={() => {
-            const json = query.serialize();
-            console.log(json);
-            alert('State logged to console');
-        }}>
-            <Save size={16} style={{marginRight: 5}} />
-            Save
-        </button>
+      <div className="topbar-center">
+          <div className="device-toggles-wrapper">
+              <button 
+                className={`device-btn ${device === 'desktop' ? 'active' : ''}`}
+                onClick={() => setDevice('desktop')}
+              >
+                  <Monitor size={18} />
+              </button>
+              <button 
+                className={`device-btn ${device === 'tablet' ? 'active' : ''}`}
+                onClick={() => setDevice('tablet')}
+              >
+                  <Tablet size={18} />
+              </button>
+              <button 
+                className={`device-btn ${device === 'mobile' ? 'active' : ''}`}
+                onClick={() => setDevice('mobile')}
+              >
+                  <Smartphone size={18} />
+              </button>
+          </div>
+      </div>
+
+      <div className="topbar-right">
+          <button className="history-btn" style={{marginRight: 10, fontSize: 13}}>
+              Preview <Play size={14} style={{marginLeft: 5, fill: 'currentColor'}} />
+          </button>
+          <button className="btn-save" style={{marginRight: 10}} onClick={() => console.log(query.serialize())}>Save</button>
+          <button className="btn-publish">Publish</button>
       </div>
     </div>
   );

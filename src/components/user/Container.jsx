@@ -4,14 +4,11 @@ import { useNode } from '@craftjs/core';
 const getSpacing = (spacing) => {
     if (Array.isArray(spacing) && spacing.length === 4) return `${spacing[0]}px ${spacing[1]}px ${spacing[2]}px ${spacing[3]}px`;
     if (typeof spacing === 'number') return `${spacing}px`; 
-    // console.warn('Invalid spacing prop:', spacing); // Useful for debug
     return '0px';
 }
 
 export const Container = ({ background, padding = [0,0,0,0], width, height, flexDirection, alignItems, justifyContent, children, margin = [0,0,0,0], borderRadius, shadow, backgroundImage }) => {
-  const { connectors: { connect, drag }, selected } = useNode((state) => ({
-    selected: state.events.selected,
-  }));
+  const { connectors: { connect, drag } } = useNode();
 
   return (
     <div
@@ -20,7 +17,7 @@ export const Container = ({ background, padding = [0,0,0,0], width, height, flex
         background: backgroundImage ? `url(${backgroundImage}) center/cover no-repeat` : background,
         padding: getSpacing(padding),
         margin: getSpacing(margin),
-        width: width,
+        width: width === '100%' ? '100%' : `${width}px`,
         height: height === 'auto' ? 'auto' : `${height}px`,
         display: 'flex',
         flexDirection,
@@ -28,8 +25,7 @@ export const Container = ({ background, padding = [0,0,0,0], width, height, flex
         justifyContent,
         borderRadius: `${borderRadius}px`,
         boxShadow: shadow === 'none' ? 'none' : '0px 3px 6px rgba(0,0,0,0.1)',
-        border: selected ? '2px solid #2684FF' : '1px dashed #e0e0e0',
-        minHeight: '50px',
+        minHeight: '20px',
       }}
     >
       {children}
@@ -37,20 +33,8 @@ export const Container = ({ background, padding = [0,0,0,0], width, height, flex
   );
 };
 
-const SpacingInput = ({ label, value, onChange }) => (
-    <div className="spacing-control">
-         <div style={{fontSize: 10, color: '#888', marginBottom: 2}}>{label}</div>
-         <input 
-            type="number" 
-            value={value} 
-            onChange={(e) => onChange(parseInt(e.target.value) || 0)}
-            style={{width: '100%', padding: '4px', fontSize: 12}}
-        />
-    </div>
-)
-
 export const ContainerSettings = () => {
-    const { actions: { setProp }, background, padding, width, height, flexDirection, margin, borderRadius, backgroundImage } = useNode((node) => ({
+    const { actions: { setProp }, background, padding, width, flexDirection, margin, borderRadius, backgroundImage } = useNode((node) => ({
         background: node.data.props.background,
         padding: node.data.props.padding,
         width: node.data.props.width,
@@ -69,46 +53,74 @@ export const ContainerSettings = () => {
 
     return (
         <div>
-            <div className="panel-section">
-                <label>Background Color</label>
-                 <input type="color" value={background} onChange={(e) => setProp(props => props.background = e.target.value)} />
+            <div className="settings-section-title">Container Settings</div>
+            
+            <div className="settings-control">
+                 <div className="settings-section-title" style={{padding: '0 0 8px 0', fontSize: 11}}>Background</div>
+                 <div className="color-input-wrapper">
+                      <div className="color-swatch" style={{background: background}}>
+                          <input type="color" value={background} onChange={(e) => setProp(props => props.background = e.target.value)} />
+                      </div>
+                      <input type="text" className="input-field" style={{background: 'none', padding: 0}} value={background.toUpperCase()} readOnly />
+                      <div className="opacity-input">100%</div>
+                  </div>
             </div>
-             <div className="panel-section">
-                <label>Background Image</label>
-                 <input type="text" placeholder="Image URL" value={backgroundImage || ''} onChange={(e) => setProp(props => props.backgroundImage = e.target.value)} />
-            </div>
-             
-             <div className="panel-section">
-                <label>Padding (T-R-B-L)</label>
-                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 5}}>
-                    <SpacingInput label="Top" value={padding[0]} onChange={(val) => handleSpacingChange('padding', 0, val)} />
-                    <SpacingInput label="Right" value={padding[1]} onChange={(val) => handleSpacingChange('padding', 1, val)} />
-                    <SpacingInput label="Bottom" value={padding[2]} onChange={(val) => handleSpacingChange('padding', 2, val)} />
-                    <SpacingInput label="Left" value={padding[3]} onChange={(val) => handleSpacingChange('padding', 3, val)} />
+
+            <div className="settings-section-title">Block Style</div>
+            
+            <div className="settings-section-title" style={{paddingTop: 0, fontSize: 11}}>Margin</div>
+            <div className="settings-control">
+                <div className="spacing-grid">
+                    <div className="spacing-box">
+                        <label>Top</label>
+                        <input type="number" value={margin[0]} onChange={(e) => handleSpacingChange('margin', 0, parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div className="spacing-box">
+                        <label>Right</label>
+                        <input type="number" value={margin[1]} onChange={(e) => handleSpacingChange('margin', 1, parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div className="spacing-box">
+                        <label>Bottom</label>
+                        <input type="number" value={margin[2]} onChange={(e) => handleSpacingChange('margin', 2, parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div className="spacing-box">
+                        <label>Left</label>
+                        <input type="number" value={margin[3]} onChange={(e) => handleSpacingChange('margin', 3, parseInt(e.target.value) || 0)} />
+                    </div>
                 </div>
             </div>
 
-             <div className="panel-section">
-                <label>Margin (T-R-B-L)</label>
-                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 5}}>
-                    <SpacingInput label="Top" value={margin[0]} onChange={(val) => handleSpacingChange('margin', 0, val)} />
-                    <SpacingInput label="Right" value={margin[1]} onChange={(val) => handleSpacingChange('margin', 1, val)} />
-                    <SpacingInput label="Bottom" value={margin[2]} onChange={(val) => handleSpacingChange('margin', 2, val)} />
-                    <SpacingInput label="Left" value={margin[3]} onChange={(val) => handleSpacingChange('margin', 3, val)} />
+            <div className="settings-section-title" style={{paddingTop: 0, fontSize: 11}}>Padding</div>
+             <div className="settings-control">
+                <div className="spacing-grid">
+                    <div className="spacing-box">
+                        <label>Top</label>
+                        <input type="number" value={padding[0]} onChange={(e) => handleSpacingChange('padding', 0, parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div className="spacing-box">
+                        <label>Right</label>
+                        <input type="number" value={padding[1]} onChange={(e) => handleSpacingChange('padding', 1, parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div className="spacing-box">
+                        <label>Bottom</label>
+                        <input type="number" value={padding[2]} onChange={(e) => handleSpacingChange('padding', 2, parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div className="spacing-box">
+                        <label>Left</label>
+                        <input type="number" value={padding[3]} onChange={(e) => handleSpacingChange('padding', 3, parseInt(e.target.value) || 0)} />
+                    </div>
                 </div>
             </div>
 
-             <div className="panel-section">
-                 <label>Direction</label>
-                 <select value={flexDirection} onChange={(e) => setProp(props => props.flexDirection = e.target.value)}>
-                    <option value="column">Column</option>
-                    <option value="row">Row</option>
+            <div className="settings-section-title" style={{paddingTop: 0, fontSize: 11}}>Direction</div>
+            <div className="settings-control">
+                 <select className="select-field" style={{width: '100%'}} value={flexDirection} onChange={(e) => setProp(props => props.flexDirection = e.target.value)}>
+                    <option value="column">Vertical (Column)</option>
+                    <option value="row">Horizontal (Row)</option>
                  </select>
             </div>
-             <div className="panel-section">
-                <label>Radius</label>
-                 <input type="number" value={borderRadius} onChange={(e) => setProp(props => props.borderRadius = e.target.value)} />
-            </div>
+
+            <button className="btn-save-settings">Save</button>
         </div>
     )
 }
@@ -116,7 +128,7 @@ export const ContainerSettings = () => {
 Container.craft = {
   props: {
     background: '#ffffff',
-    backgroundImage: '', // Default no image
+    backgroundImage: '',
     padding: [20, 20, 20, 20],
     margin: [0, 0, 0, 0],
     width: '100%',

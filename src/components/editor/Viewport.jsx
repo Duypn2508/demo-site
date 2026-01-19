@@ -1,29 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Topbar } from './Topbar';
 import { Toolbox } from './Toolbox';
 import { SettingsPanel } from './SettingsPanel';
+import { useEditor } from '@craftjs/core';
 
 export const Viewport = ({ children }) => {
+  const { connectors, actions } = useEditor();
+  const [device, setDevice] = useState('mobile');
+
   return (
     <div className="viewport">
-      <Topbar />
+      <Topbar setDevice={setDevice} device={device} />
       <div className="editor-container">
-        <div className="left-panel">
-           <Toolbox />
-        </div>
+        <Toolbox />
         
-        <div className="center-panel">
-            <div className="mobile-view-wrapper">
-                <div className="mobile-notch"></div>
-                <div className="craftjs-canvas-host">
+        <div className="center-panel" onClick={(e) => {
+            if (e.target === e.currentTarget) {
+                actions.selectNode(null);
+            }
+        }}>
+            <div className={`frame-${device}`}>
+                 <div 
+                    className="craftjs-canvas-host"
+                    ref={(ref) => connectors.select(connectors.hover(ref, null), null)}
+                 >
                     {children}
-                </div>
+                 </div>
             </div>
         </div>
 
-        <div className="right-panel">
-            <SettingsPanel />
-        </div>
+        <SettingsPanel />
       </div>
     </div>
   );

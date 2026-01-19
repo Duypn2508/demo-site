@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNode } from '@craftjs/core';
-
+import { Image as ImageIcon, X } from 'lucide-react';
 
 const getSpacing = (spacing) => {
     if (Array.isArray(spacing) && spacing.length === 4) return `${spacing[0]}px ${spacing[1]}px ${spacing[2]}px ${spacing[3]}px`;
@@ -9,9 +9,7 @@ const getSpacing = (spacing) => {
 }
 
 export const UserImage = ({ src, width, height, objectFit, borderRadius, margin = [0,0,0,0], padding = [0,0,0,0] }) => {
-     const { connectors: { connect, drag }, selected } = useNode((state) => ({
-    selected: state.events.selected,
-  }));
+  const { connectors: { connect, drag } } = useNode();
 
   return (
       <div 
@@ -20,110 +18,101 @@ export const UserImage = ({ src, width, height, objectFit, borderRadius, margin 
             display: 'inline-block',
             margin: getSpacing(margin),
             padding: getSpacing(padding),
-            border: selected ? '2px solid #2684FF' : '2px solid transparent', // Highlight container
-            lineHeight: 0 // fixes weird image spacing
+            lineHeight: 0,
+            width: width === '100%' ? '100%' : `${width}px`,
         }}
-    >
+      >
         <img 
-            src={src || 'https://via.placeholder.com/150'} 
+            src={src || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=400'} 
             style={{
-                width: width, 
-                height: height, 
-                objectFit, 
+                width: '100%',
+                height: height === 'auto' ? 'auto' : `${height}px`,
+                objectFit,
                 borderRadius: `${borderRadius}px`,
-                maxWidth: '100%',
-                display: 'block'
             }} 
+            alt="user"
         />
       </div>
-  )
-}
-
-const SpacingInput = ({ label, value, onChange }) => (
-    <div className="spacing-control">
-         <div style={{fontSize: 10, color: '#888', marginBottom: 2}}>{label}</div>
-         <input 
-            type="number" 
-            value={value} 
-            onChange={(e) => onChange(parseInt(e.target.value) || 0)}
-            style={{width: '100%', padding: '4px', fontSize: 12}}
-        />
-    </div>
-)
+  );
+};
 
 export const ImageSettings = () => {
-     const { actions: { setProp }, src, width, height, borderRadius, objectFit, margin, padding } = useNode((node) => ({
+    const { actions: { setProp }, src, width, borderRadius, margin } = useNode((node) => ({
         src: node.data.props.src,
         width: node.data.props.width,
-        height: node.data.props.height,
         borderRadius: node.data.props.borderRadius,
-        objectFit: node.data.props.objectFit,
         margin: node.data.props.margin,
-        padding: node.data.props.padding,
     }));
 
-    const handleSpacingChange = (type, index, value) => {
+    const handleSpacingChange = (index, value) => {
         setProp(props => {
-            if (!props[type]) props[type] = [0,0,0,0]; // Ensure array exists
-            props[type][index] = value;
+            props.margin[index] = value;
         });
     }
 
     return (
         <div>
-             <div className="panel-section">
-                <label>Image URL</label>
-                 <input type="text" value={src} onChange={(e) => setProp(props => props.src = e.target.value)} />
+            <div className="settings-section-title">Image</div>
+            <div className="settings-control">
+                <button className="btn-save" style={{width: '100%', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8}}>
+                    Select Image <ImageIcon size={16} />
+                </button>
             </div>
-             <div className="panel-section">
-                 <label>Width</label>
-                 <input type="text" value={width} onChange={(e) => setProp(props => props.width = e.target.value)} />
-            </div>
-             <div className="panel-section">
-                 <label>Height</label>
-                 <input type="text" value={height} onChange={(e) => setProp(props => props.height = e.target.value)} />
-            </div>
-             <div className="panel-section">
-                <label>Fit</label>
-                 <select value={objectFit} onChange={(e) => setProp(props => props.objectFit = e.target.value)}>
-                    <option value="cover">Cover</option>
-                    <option value="contain">Contain</option>
-                    <option value="fill">Fill</option>
-                 </select>
-            </div>
+            
+            {src && (
+                <div className="settings-control" style={{position: 'relative'}}>
+                    <img src={src} style={{width: '100%', borderRadius: 12, height: 100, objectFit: 'cover'}} alt="preview" />
+                    <button 
+                        onClick={() => setProp(props => props.src = '')}
+                        style={{position: 'absolute', top: 12, right: 20, background: 'white', borderRadius: '50%', padding: 4, display: 'flex', border: '1px solid #ddd'}}
+                    >
+                        <X size={12} />
+                    </button>
+                </div>
+            )}
 
-            <div className="panel-section">
-                <label>Padding (T-R-B-L)</label>
-                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 5}}>
-                    <SpacingInput label="Top" value={padding?.[0] || 0} onChange={(val) => handleSpacingChange('padding', 0, val)} />
-                    <SpacingInput label="Right" value={padding?.[1] || 0} onChange={(val) => handleSpacingChange('padding', 1, val)} />
-                    <SpacingInput label="Bottom" value={padding?.[2] || 0} onChange={(val) => handleSpacingChange('padding', 2, val)} />
-                    <SpacingInput label="Left" value={padding?.[3] || 0} onChange={(val) => handleSpacingChange('padding', 3, val)} />
+            <div className="settings-section-title">Block Style</div>
+            <div className="settings-section-title" style={{paddingTop: 0, fontSize: 11}}>Margin</div>
+            <div className="settings-control">
+                <div className="spacing-grid">
+                    <div className="spacing-box">
+                        <label>Top</label>
+                        <input type="number" value={margin[0]} onChange={(e) => handleSpacingChange(0, parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div className="spacing-box">
+                        <label>Right</label>
+                        <input type="number" value={margin[1]} onChange={(e) => handleSpacingChange(1, parseInt(e.target.value) || 0)} />
+                    </div>
                 </div>
             </div>
 
-            <div className="panel-section">
-                <label>Margin (T-R-B-L)</label>
-                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 5}}>
-                    <SpacingInput label="Top" value={margin?.[0] || 0} onChange={(val) => handleSpacingChange('margin', 0, val)} />
-                    <SpacingInput label="Right" value={margin?.[1] || 0} onChange={(val) => handleSpacingChange('margin', 1, val)} />
-                    <SpacingInput label="Bottom" value={margin?.[2] || 0} onChange={(val) => handleSpacingChange('margin', 2, val)} />
-                    <SpacingInput label="Left" value={margin?.[3] || 0} onChange={(val) => handleSpacingChange('margin', 3, val)} />
+            <div className="settings-section-title" style={{paddingTop: 0, fontSize: 11}}>Width</div>
+            <div className="settings-control">
+                <div className="input-row">
+                    <input 
+                        type="number" 
+                        className="input-field" 
+                        value={width === '100%' ? 100 : width} 
+                        onChange={(e) => setProp(props => props.width = parseInt(e.target.value))} 
+                    />
+                    <span style={{fontSize: 12, color: '#888'}}>px</span>
                 </div>
             </div>
+
+            <button className="btn-save-settings">Save</button>
         </div>
-    )
+    );
 }
 
 UserImage.craft = {
     props: {
-        src: 'https://via.placeholder.com/300x200',
+        src: '',
         width: '100%',
         height: 'auto',
         objectFit: 'cover',
         borderRadius: 0,
-        margin: [0, 0, 0, 0],
-        padding: [0, 0, 0, 0]
+        margin: [0,0,0,0],
+        padding: [0,0,0,0],
     },
     related: {
         settings: ImageSettings

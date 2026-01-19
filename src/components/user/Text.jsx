@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNode } from '@craftjs/core';
-
+import { AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 
 const getSpacing = (spacing) => {
     if (Array.isArray(spacing) && spacing.length === 4) return `${spacing[0]}px ${spacing[1]}px ${spacing[2]}px ${spacing[3]}px`;
@@ -9,9 +9,7 @@ const getSpacing = (spacing) => {
 }
 
 export const Text = ({ text, fontSize, textAlign, color, fontWeight, margin = [0,0,0,0], padding = [0,0,0,0] }) => {
-  const { connectors: { connect, drag }, selected } = useNode((state) => ({
-    selected: state.events.selected,
-  }));
+  const { connectors: { connect, drag } } = useNode();
 
   return (
     <div
@@ -23,7 +21,6 @@ export const Text = ({ text, fontSize, textAlign, color, fontWeight, margin = [0
         fontWeight,
         margin: getSpacing(margin),
         padding: getSpacing(padding),
-        border: selected ? '2px solid #2684FF' : '2px solid transparent', // Highlight on select
       }}
     >
       {text}
@@ -31,110 +28,110 @@ export const Text = ({ text, fontSize, textAlign, color, fontWeight, margin = [0
   );
 };
 
-const SpacingInput = ({ label, value, onChange }) => (
-    <div className="spacing-control">
-         <div style={{fontSize: 10, color: '#888', marginBottom: 2}}>{label}</div>
-         <input 
-            type="number" 
-            value={value} 
-            onChange={(e) => onChange(parseInt(e.target.value) || 0)}
-            style={{width: '100%', padding: '4px', fontSize: 12}}
-        />
-    </div>
-)
-
 export const TextSettings = () => {
-    const { actions: { setProp }, fontSize, textAlign, color, text, fontWeight, margin, padding } = useNode((node) => ({
+    const { actions: { setProp }, fontSize, textAlign, color, text, fontWeight, margin } = useNode((node) => ({
         text: node.data.props.text,
         fontSize: node.data.props.fontSize,
         textAlign: node.data.props.textAlign,
         color: node.data.props.color,
         fontWeight: node.data.props.fontWeight,
         margin: node.data.props.margin,
-        padding: node.data.props.padding,
     }));
 
-    const handleSpacingChange = (type, index, value) => {
+    const handleSpacingChange = (index, value) => {
         setProp(props => {
-            if (!props[type]) props[type] = [0,0,0,0]; // Ensure array exists
-            props[type][index] = value;
+            props.margin[index] = value;
         });
     }
 
     return (
-    <>
-      <div className="panel-section">
-        <label>Text</label>
-        <input 
-            type="text" 
+    <div>
+      <div className="settings-section-title">Text Content</div>
+      <div className="settings-control">
+          <textarea 
+            className="input-field" 
+            rows={2} 
             value={text} 
             onChange={(e) => setProp(props => props.text = e.target.value)} 
-        />
-      </div>
-      <div className="panel-section">
-        <label>Font Size</label>
-        <input 
-            type="range" 
-            min="10" max="50" 
-            value={fontSize || 14} 
-            onChange={(e) => setProp(props => props.fontSize = e.target.value)} 
-        />
-        <span>{fontSize}px</span>
-      </div>
-      <div className="panel-section">
-        <label>Color</label>
-        <input 
-            type="color" 
-            value={color || '#000000'} 
-            onChange={(e) => setProp(props => props.color = e.target.value)} 
-        />
-      </div>
-      <div className="panel-section">
-        <label>Weight</label>
-        <select value={fontWeight || 'normal'} onChange={(e) => setProp(props => props.fontWeight = e.target.value)}>
-             <option value="normal">Normal</option>
-             <option value="bold">Bold</option>
-             <option value="500">Medium</option>
-        </select>
-      </div>
-      <div className="panel-section">
-        <label>Align</label>
-        <div className="radio-group">
-            <button className={textAlign === 'left' ? 'active' : ''} onClick={() => setProp(props => props.textAlign = 'left')}>L</button>
-            <button className={textAlign === 'center' ? 'active' : ''} onClick={() => setProp(props => props.textAlign = 'center')}>C</button>
-            <button className={textAlign === 'right' ? 'active' : ''} onClick={() => setProp(props => props.textAlign = 'right')}>R</button>
-        </div>
-      </div>
-      
-       <div className="panel-section">
-        <label>Padding (T-R-B-L)</label>
-        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 5}}>
-            <SpacingInput label="Top" value={padding?.[0] || 0} onChange={(val) => handleSpacingChange('padding', 0, val)} />
-            <SpacingInput label="Right" value={padding?.[1] || 0} onChange={(val) => handleSpacingChange('padding', 1, val)} />
-            <SpacingInput label="Bottom" value={padding?.[2] || 0} onChange={(val) => handleSpacingChange('padding', 2, val)} />
-            <SpacingInput label="Left" value={padding?.[3] || 0} onChange={(val) => handleSpacingChange('padding', 3, val)} />
-        </div>
+          />
       </div>
 
-       <div className="panel-section">
-        <label>Margin (T-R-B-L)</label>
-        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 5}}>
-            <SpacingInput label="Top" value={margin?.[0] || 0} onChange={(val) => handleSpacingChange('margin', 0, val)} />
-            <SpacingInput label="Right" value={margin?.[1] || 0} onChange={(val) => handleSpacingChange('margin', 1, val)} />
-            <SpacingInput label="Bottom" value={margin?.[2] || 0} onChange={(val) => handleSpacingChange('margin', 2, val)} />
-            <SpacingInput label="Left" value={margin?.[3] || 0} onChange={(val) => handleSpacingChange('margin', 3, val)} />
-        </div>
+      <div className="settings-control">
+          <div className="input-row">
+              <input 
+                type="number" 
+                className="input-field" 
+                style={{maxWidth: 80}}
+                value={fontSize} 
+                onChange={(e) => setProp(props => props.fontSize = parseInt(e.target.value))} 
+              />
+              <span style={{fontSize: 12, color: '#888'}}>px</span>
+              <select 
+                className="select-field" 
+                style={{flex: 1}}
+                value={fontWeight} 
+                onChange={(e) => setProp(props => props.fontWeight = e.target.value)}
+              >
+                  <option value="normal">Regular</option>
+                  <option value="bold">Bold</option>
+              </select>
+          </div>
       </div>
-    </>
+
+      <div className="settings-control">
+          <div className="input-row">
+              <div className="color-input-wrapper">
+                  <div className="color-swatch" style={{background: color}}>
+                      <input type="color" value={color} onChange={(e) => setProp(props => props.color = e.target.value)} />
+                  </div>
+                  <input type="text" className="input-field" style={{background: 'none', padding: 0}} value={color.toUpperCase()} readOnly />
+                  <div className="opacity-input">100%</div>
+              </div>
+          </div>
+      </div>
+
+      <div className="settings-control">
+          <div className="toggle-group">
+               <button className={`toggle-item ${textAlign === 'left' ? 'active' : ''}`} onClick={() => setProp(props => props.textAlign = 'left')}><AlignLeft size={16} /></button>
+               <button className={`toggle-item ${textAlign === 'center' ? 'active' : ''}`} onClick={() => setProp(props => props.textAlign = 'center')}><AlignCenter size={16} /></button>
+               <button className={`toggle-item ${textAlign === 'right' ? 'active' : ''}`} onClick={() => setProp(props => props.textAlign = 'right')}><AlignRight size={16} /></button>
+          </div>
+      </div>
+
+      <div className="settings-section-title">Block Style</div>
+      <div className="settings-section-title" style={{paddingTop: 0, fontSize: 11}}>Margin</div>
+      <div className="settings-control">
+          <div className="spacing-grid">
+               <div className="spacing-box">
+                   <label>Top</label>
+                   <input type="number" value={margin[0]} onChange={(e) => handleSpacingChange(0, parseInt(e.target.value) || 0)} />
+               </div>
+               <div className="spacing-box">
+                   <label>Right</label>
+                   <input type="number" value={margin[1]} onChange={(e) => handleSpacingChange(1, parseInt(e.target.value) || 0)} />
+               </div>
+               <div className="spacing-box">
+                   <label>Bottom</label>
+                   <input type="number" value={margin[2]} onChange={(e) => handleSpacingChange(2, parseInt(e.target.value) || 0)} />
+               </div>
+               <div className="spacing-box">
+                   <label>Left</label>
+                   <input type="number" value={margin[3]} onChange={(e) => handleSpacingChange(3, parseInt(e.target.value) || 0)} />
+               </div>
+          </div>
+      </div>
+
+      <button className="btn-save-settings">Save</button>
+    </div>
   );
 };
 
 Text.craft = {
   props: {
-    text: 'Hi there',
+    text: 'Enter text here',
     fontSize: 16,
     textAlign: 'left',
-    color: '#000000',
+    color: '#333333',
     fontWeight: 'normal',
     margin: [0, 0, 0, 0],
     padding: [0, 0, 0, 0]
