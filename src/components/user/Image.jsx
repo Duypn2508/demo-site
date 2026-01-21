@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNode } from '@craftjs/core';
 import { Image as ImageIcon, X } from 'lucide-react';
+import { useBreakpoint, getResponsiveValue, setResponsiveValue } from '../../contexts/BreakpointContext';
 
 const getSpacing = (spacing) => {
     if (Array.isArray(spacing) && spacing.length === 4) return `${spacing[0]}px ${spacing[1]}px ${spacing[2]}px ${spacing[3]}px`;
@@ -10,25 +11,34 @@ const getSpacing = (spacing) => {
 
 export const UserImage = ({ src, width, height, objectFit, borderRadius, margin = [0,0,0,0], padding = [0,0,0,0] }) => {
   const { connectors: { connect, drag } } = useNode();
+  const breakpoint = useBreakpoint();
+
+  // Get responsive values
+  const currentWidth = getResponsiveValue(width, breakpoint);
+  const currentHeight = getResponsiveValue(height, breakpoint);
+  const currentMargin = getResponsiveValue(margin, breakpoint);
+  const currentPadding = getResponsiveValue(padding, breakpoint);
+  const currentBorderRadius = getResponsiveValue(borderRadius, breakpoint);
+  const currentObjectFit = getResponsiveValue(objectFit, breakpoint);
 
   return (
       <div 
         ref={ref => connect(drag(ref))} 
         style={{
             display: 'inline-block',
-            margin: getSpacing(margin),
-            padding: getSpacing(padding),
+            margin: getSpacing(currentMargin),
+            padding: getSpacing(currentPadding),
             lineHeight: 0,
-            width: width === '100%' ? '100%' : `${width}px`,
+            width: currentWidth === '100%' ? '100%' : `${currentWidth}px`,
         }}
       >
         <img 
             src={src || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=400'} 
             style={{
                 width: '100%',
-                height: height === 'auto' ? 'auto' : `${height}px`,
-                objectFit,
-                borderRadius: `${borderRadius}px`,
+                height: currentHeight === 'auto' ? 'auto' : `${currentHeight}px`,
+                objectFit: currentObjectFit,
+                borderRadius: `${currentBorderRadius}px`,
             }} 
             alt="user"
         />
@@ -37,26 +47,50 @@ export const UserImage = ({ src, width, height, objectFit, borderRadius, margin 
 };
 
 export const ImageSettings = () => {
-    const { actions: { setProp }, src, width, borderRadius, margin } = useNode((node) => ({
-        src: node.data.props.src,
-        width: node.data.props.width,
-        borderRadius: node.data.props.borderRadius,
-        margin: node.data.props.margin,
+    const breakpoint = useBreakpoint();
+    
+    const { actions: { setProp }, props } = useNode((node) => ({
+        props: node.data.props,
     }));
 
+    const { src, width, height, borderRadius, margin, objectFit } = props;
+
+    // Get current breakpoint values
+    const currentWidth = getResponsiveValue(width, breakpoint) || '100%';
+    const currentHeight = getResponsiveValue(height, breakpoint) || 'auto';
+    const currentBorderRadius = getResponsiveValue(borderRadius, breakpoint) || 0;
+    const currentMargin = getResponsiveValue(margin, breakpoint) || [0, 0, 0, 0];
+    const currentObjectFit = getResponsiveValue(objectFit, breakpoint) || 'cover';
+
+    // Helper to update responsive prop
+    const updateResponsiveProp = (propName, value) => {
+      setProp(props => {
+        props[propName] = setResponsiveValue(props[propName], breakpoint, value);
+      });
+    };
+
     const handleSpacingChange = (index, value) => {
-        setProp(props => {
-            props.margin[index] = value;
-        });
-    }
+        const newMargin = [...currentMargin];
+        newMargin[index] = value;
+        updateResponsiveProp('margin', newMargin);
+    };
 
     return (
         <div>
-            <div className="settings-section-title">Image</div>
+            {/* Breakpoint Indicator */}
+            <div className="settings-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span>Image</span>
+                <span className="breakpoint-badge">{breakpoint.toUpperCase()}</span>
+            </div>
+            
             <div className="settings-control">
-                <button className="btn-save" style={{width: '100%', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8}}>
-                    Select Image <ImageIcon size={16} />
-                </button>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  placeholder="Image URL..."
+                  value={src || ''} 
+                  onChange={(e) => setProp(props => props.src = e.target.value)} 
+                />
             </div>
             
             {src && (
@@ -71,31 +105,75 @@ export const ImageSettings = () => {
                 </div>
             )}
 
-            <div className="settings-section-title">Block Style</div>
-            <div className="settings-section-title" style={{paddingTop: 0, fontSize: 11}}>Margin</div>
+            <div className="settings-section-title">Dimensions (responsive)</div>
             <div className="settings-control">
                 <div className="spacing-grid">
                     <div className="spacing-box">
-                        <label>Top</label>
-                        <input type="number" value={margin[0]} onChange={(e) => handleSpacingChange(0, parseInt(e.target.value) || 0)} />
+                        <label>W</label>
+                        <input 
+                          type="number" 
+                          value={currentWidth === '100%' ? '' : currentWidth} 
+                          placeholder="100%"
+                          onChange={(e) => updateResponsiveProp('width', e.target.value ? parseInt(e.target.value) : '100%')} 
+                        />
                     </div>
                     <div className="spacing-box">
-                        <label>Right</label>
-                        <input type="number" value={margin[1]} onChange={(e) => handleSpacingChange(1, parseInt(e.target.value) || 0)} />
+                        <label>H</label>
+                        <input 
+                          type="number" 
+                          value={currentHeight === 'auto' ? '' : currentHeight} 
+                          placeholder="auto"
+                          onChange={(e) => updateResponsiveProp('height', e.target.value ? parseInt(e.target.value) : 'auto')} 
+                        />
                     </div>
                 </div>
             </div>
 
-            <div className="settings-section-title" style={{paddingTop: 0, fontSize: 11}}>Width</div>
+            <div className="settings-section-title" style={{paddingTop: 0, fontSize: 11}}>Object Fit (responsive)</div>
             <div className="settings-control">
-                <div className="input-row">
-                    <input 
-                        type="number" 
-                        className="input-field" 
-                        value={width === '100%' ? 100 : width} 
-                        onChange={(e) => setProp(props => props.width = parseInt(e.target.value))} 
-                    />
-                    <span style={{fontSize: 12, color: '#888'}}>px</span>
+                <select 
+                  className="select-field" 
+                  style={{width: '100%'}} 
+                  value={currentObjectFit} 
+                  onChange={(e) => updateResponsiveProp('objectFit', e.target.value)}
+                >
+                    <option value="cover">Cover</option>
+                    <option value="contain">Contain</option>
+                    <option value="fill">Fill</option>
+                    <option value="none">None</option>
+                </select>
+            </div>
+
+            <div className="settings-section-title" style={{paddingTop: 0, fontSize: 11}}>Border Radius (responsive)</div>
+            <div className="settings-control">
+                <input 
+                  type="number" 
+                  className="input-field" 
+                  value={currentBorderRadius} 
+                  onChange={(e) => updateResponsiveProp('borderRadius', parseInt(e.target.value) || 0)} 
+                />
+            </div>
+
+            <div className="settings-section-title">Block Style</div>
+            <div className="settings-section-title" style={{paddingTop: 0, fontSize: 11}}>Margin (responsive)</div>
+            <div className="settings-control">
+                <div className="spacing-grid">
+                    <div className="spacing-box">
+                        <label>Top</label>
+                        <input type="number" value={currentMargin[0]} onChange={(e) => handleSpacingChange(0, parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div className="spacing-box">
+                        <label>Right</label>
+                        <input type="number" value={currentMargin[1]} onChange={(e) => handleSpacingChange(1, parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div className="spacing-box">
+                        <label>Bottom</label>
+                        <input type="number" value={currentMargin[2]} onChange={(e) => handleSpacingChange(2, parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div className="spacing-box">
+                        <label>Left</label>
+                        <input type="number" value={currentMargin[3]} onChange={(e) => handleSpacingChange(3, parseInt(e.target.value) || 0)} />
+                    </div>
                 </div>
             </div>
 
